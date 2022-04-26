@@ -9,35 +9,35 @@
 # 3. Set d0 <- g0
 # 4. 
 
-const Φ = (1 + √5) / 2 # Golden Ratio
+const Φ = Base.MathConstants.φ # Golden Ratio
 const ϵ_min = 1e-21 # Tolerance to avoid division by zero
 
 # Need a better place for this
 const growLimit = 100
 const maxEvaluations = 500
 
-function bracket_minimum(f, x=0; s=1e-2, k=2.0)
-    a, ya = x, f(x)
-    b, yb = a+s, f(a+s)
-    if yb > ya
-        a, b = b, a
-        ya, yb = yb, ya
-        s = -s
-    end
+# function bracket_minimum(f, x=0; s=1e-2, k=2.0)
+#     a, ya = x, f(x)
+#     b, yb = a+s, f(a+s)
+#     if yb > ya
+#         a, b = b, a
+#         ya, yb = yb, ya
+#         s = -s
+#     end
 
-    while true
-        c, yc = b+s,  f(b+s)
-        if yc > yb
-            return a < c? (a,c) : (c, a)
-        end
-        a, ya, b, yb = b, yb, c, yc
-        s *= k
-    end
-end
+#     while true
+#         c, yc = b+s,  f(b+s)
+#         if yc > yb
+#             return a < c? (a,c) : (c, a)
+#         end
+#         a, ya, b, yb = b, yb, c, yc
+#         s *= k
+#     end
+# end
 
-
+bisection(df, a::Number, b::Number)= bisection(df, promote(a, b)...)
 bisection(df, a, b, ϵ) = bisection(df, a, b, ϵ=ϵ)
-function bisection(df, a::T, b::T; ϵ=eps(T)) where T
+function bisection(df, a::T, b::T; ϵ=eps(T)) where T <: Number
     if a > b; a,b = b, a; end # ensure a < b
 
     ya, yb = df(a), df(b)
@@ -55,11 +55,11 @@ function bisection(df, a::T, b::T; ϵ=eps(T)) where T
             b = x
         end
     end
-    return (a,b)
+    return min(a,b)
 end
 
-
-function brentdekker(f, a::T, b::T) where T <: Real
+bracket(f, a::Real, b::Real) = bracket(f, promote(a,b)...)
+function bracket(f, a::T, b::T) where T <: Real
     fa, fb = f(a), f(b)
 
     # assuming minimization
@@ -68,10 +68,12 @@ function brentdekker(f, a::T, b::T) where T <: Real
         fa, fb = fb, fa
     end
 
+    a, fa, b, fb
     c = b + Φ * (b - a)
     fc = f(c)
 
     while fc < fb
+
         tmp1 = (b - a) * (fb - fc)
         tmp2 = (b - c) * (fb - fa)
 
@@ -124,5 +126,5 @@ function brentdekker(f, a::T, b::T) where T <: Real
         flo, fhi = fhi, flo
     end
 
-    return lo, hi, flo, fhi, mid, fmid
+    return (hi => fhi, mid =>fmid, lo => flo)
 end

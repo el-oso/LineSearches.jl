@@ -103,4 +103,6 @@ include("initialguess.jl")
 
 include("deprecate.jl")
 
+include("nlconjugategradient.jl")
+
 end # module
